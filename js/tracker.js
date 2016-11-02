@@ -11,39 +11,111 @@
     'contributors'
   ].join(' ');
 
-  /*
-   * Your implementation goes here!
-   */
-
   // URLs for the position and target.
   let positionURL = trackerURL + '/position.json';
   let targetURL = trackerURL + '/target.json';
 
-  // Get the destination info from website.
-  $.getJSON(targetURL, function(data) {
-    console.log(data);
-  });
+  // Initialize the map at rollaCenter, w/ default zoom of 10.
+  var mymap = L.map('map').setView(rollaCenter, 10);
 
-  // Initialize the map.
-  var mymap = L.map('map').setView(rollaCenter, 13);
-  L.tileLayer(osmUrl, osmAttrib).addTo(mymap);
+  // Initialize tileLayer.
+  L.tileLayer(osmUrl, {
+    attribution: osmAttrib,
+    maxZoom: 20
+  }).addTo(mymap);
 
-  // Get the position info from website.
-
-  // Add location icon.
+  // Meowth icon.
   var myIcon = L.icon({
-    iconUrl: meowthImageURL
+    iconUrl: meowthImageURL,
+    iconSize: [50, 50],
+    iconAnchor: [25, 50]
   });
 
   // Do stuff with the current location.
-  $.getJSON(positionURL, function(data) {
-    let marker = L.marker([data['Lat'], data['Long']], {icon: myIcon}).addTo(mymap);
-    let pBar = document.getElementById('pBar');
+  var meowth, pBar, target;
 
-    document.getElementById('transportName').innerHTML = data['Transport'];
-    pBar.innerHTML = String(Number(data['Progress'] * 100).toPrecision(4)) + '%';  	 
-    pBar.style.width = data['Progress'] * 100 + '%';
+  // Function for updating pin locations, etc.
+  function updaterFunc() {
+    $.getJSON(positionURL, function(data) {
+
+      // Initialize meowth's marker & target, else update meowth's current position.
+      if (!meowth) {
+        meowth = L.marker([data['Lat'], data['Long']], {icon: myIcon}).addTo(mymap);
+	document.getElementById('transportName').innerHTML = data['Transport'];
+      } else {
+        // Update meowth's position.
+        meowth.setLatLng([data['Lat'], data['Long']]).update();
+      }
+
+      // Update the progress bar's percentage and width.
+      if (!pBar) {
+        pBar = document.getElementById('pBar');
+      } else {
+        pBar.innerHTML = (data['Progress'] * 100).toFixed(2) + '%';  	 
+        pBar.style.width = data['Progress'] * 100 + '%';
+
+	  //document.getElementById('transportName').innerHTML = data['Transport'];  
+      }
+
+      setTimeout(updaterFunc, 500);
+    });
+
+    // Place the target.
+    $.getJSON(targetURL, function(data) {
+      if (!target) {
+        target = L.marker([data['Lat'], data['Long']]).addTo(mymap);
+      } else {
+        target.setLatLng([data['Lat'], data['Long']]).update();
+      }
+    });
+
+  };
+
+  updaterFunc();
+
+  // "Zoom to Meowth"
+  var zoomMeowth = document.getElementById("zoomMeowth");
+
+  zoomMeowth.addEventListener("click", function(event) {
+    // Prevents the page from reloading upon click.
+    event.preventDefault();
+    // Fly to meowth's position. 
+    mymap.flyTo(meowth.getLatLng(), 15);
   });
+
+  // "Zoom to Target"
+  var zoomTarget = document.getElementById("zoomTarget");
+
+  zoomTarget.addEventListener("click", function(event) {
+    // Prevents the page from reloading upon click.
+    event.preventDefault();
+    // Fly to target's position. 
+    mymap.flyTo(target.getLatLng(), 15);
+  });
+
+  // "Zoom Out"
+  var zoomOut = document.getElementById("zoomOut");
+
+  zoomOut.addEventListener("click", function(event) {
+    // Prevents the page from reloading upon click.
+    event.preventDefault();
+    // Fly to target's position. 
+    mymap.flyTo(rollaCenter, 10);
+  });
+
+  // "Follow Meowth"
+  // ... doesn't work.. need to finish.
+  var follow = document.getElementById("zoomOut");
+
+  zoomOut.addEventListener("click", function(event) {
+    // Prevents the page from reloading upon click.
+    event.preventDefault();
+    // Fly to target's position. 
+    mymap.flyTo(meowth.getLatLng(), mymap.getZoom());
+  });
+
+
+
 
 
 })();
