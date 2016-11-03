@@ -72,7 +72,7 @@
 
     // Continue to follow meowth if box is checked.
     if (follow != undefined && follow.checked) {
-      mymap.setView(meowth.getLatLng());
+      mymap.panTo(meowth.getLatLng());
     }
 
     // Call this function again in 500 ms.
@@ -85,14 +85,8 @@
   var follow = document.getElementById('follow');
 
   follow.addEventListener('change', function(event) {
-
     // Prevents the page from reloading upon click.
     event.preventDefault();
-
-    // Fly to target's position.
-    if (follow.checked) {
-      mymap.flyTo(meowth.getLatLng());
-    }
   });
 
   // "Zoom to Meowth"
@@ -106,7 +100,7 @@
       follow.click();
     }
     // Fly to meowth's position.
-    mymap.flyTo(meowth.getLatLng(), 15);
+    mymap.flyTo(meowth.getLatLng(), 16);
   });
 
   // "Zoom to Target"
@@ -120,7 +114,7 @@
       follow.click();
     }
     // Fly to target's position.
-    mymap.flyTo(target.getLatLng(), 15);
+    mymap.flyTo(target.getLatLng(), 16);
   });
 
   // "Zoom Out"
