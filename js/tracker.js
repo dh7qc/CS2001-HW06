@@ -12,8 +12,8 @@
   ].join(' ');
 
   // URLs for the position and target.
-  let positionURL = trackerURL + '/position.json';
-  let targetURL = trackerURL + '/target.json';
+  var positionURL = trackerURL + '/position.json';
+  var targetURL = trackerURL + '/target.json';
 
   // Initialize the map at rollaCenter, w/ default zoom of 10.
   var mymap = L.map('map').setView(rollaCenter, 10);
@@ -31,91 +31,110 @@
     iconAnchor: [25, 50]
   });
 
-  // Do stuff with the current location.
-  var meowth, pBar, target;
+  // Necessary Variables.
+  var meowth;
+  var pBar;
+  var target;
 
   // Function for updating pin locations, etc.
   function updaterFunc() {
+    // Get current position.
     $.getJSON(positionURL, function(data) {
-
       // Initialize meowth's marker & target, else update meowth's current position.
       if (!meowth) {
-        meowth = L.marker([data['Lat'], data['Long']], {icon: myIcon}).addTo(mymap);
-	document.getElementById('transportName').innerHTML = data['Transport'];
+        meowth = L.marker([data.Lat, data.Long], {icon: myIcon}).addTo(mymap);
+        document.getElementById('transportName').innerHTML = data.Transport;
       } else {
         // Update meowth's position.
-        meowth.setLatLng([data['Lat'], data['Long']]).update();
+        meowth.setLatLng([data.Lat, data.Long]).update();
       }
 
       // Update the progress bar's percentage and width.
       if (!pBar) {
         pBar = document.getElementById('pBar');
       } else {
-        pBar.innerHTML = (data['Progress'] * 100).toFixed(2) + '%';  	 
-        pBar.style.width = data['Progress'] * 100 + '%';
+        pBar.innerHTML = (data.Progress * 100).toFixed(2) + '%';
+        pBar.style.width = data.Progress * 100 + '%';
 
-	  //document.getElementById('transportName').innerHTML = data['Transport'];  
+        // Update the transport name too.
+        document.getElementById('transportName').innerHTML = data.Transport;
       }
-
-      setTimeout(updaterFunc, 500);
     });
 
     // Place the target.
     $.getJSON(targetURL, function(data) {
       if (!target) {
-        target = L.marker([data['Lat'], data['Long']]).addTo(mymap);
+        target = L.marker([data.Lat, data.Long]).addTo(mymap);
       } else {
-        target.setLatLng([data['Lat'], data['Long']]).update();
+        target.setLatLng([data.Lat, data.Long]).update();
       }
     });
 
+    // Continue to follow meowth if box is checked.
+    if (follow != undefined && follow.checked) {
+      mymap.setView(meowth.getLatLng());
+    }
+
+    // Call this function again in 500 ms.
+    setTimeout(updaterFunc, 500);
   };
 
   updaterFunc();
 
-  // "Zoom to Meowth"
-  var zoomMeowth = document.getElementById("zoomMeowth");
+  // "Follow Meowth"
+  var follow = document.getElementById('follow');
 
-  zoomMeowth.addEventListener("click", function(event) {
+  follow.addEventListener('change', function(event) {
+
     // Prevents the page from reloading upon click.
     event.preventDefault();
-    // Fly to meowth's position. 
+
+    // Fly to target's position.
+    if (follow.checked) {
+      mymap.flyTo(meowth.getLatLng());
+    }
+  });
+
+  // "Zoom to Meowth"
+  var zoomMeowth = document.getElementById('zoomMeowth');
+
+  zoomMeowth.addEventListener('click', function(event) {
+    // Prevents the page from reloading upon click.
+    event.preventDefault();
+    // Uncheck Follow Meowth if needed.
+    if (follow.checked) {
+      follow.click();
+    }
+    // Fly to meowth's position.
     mymap.flyTo(meowth.getLatLng(), 15);
   });
 
   // "Zoom to Target"
-  var zoomTarget = document.getElementById("zoomTarget");
+  var zoomTarget = document.getElementById('zoomTarget');
 
-  zoomTarget.addEventListener("click", function(event) {
+  zoomTarget.addEventListener('click', function(event) {
     // Prevents the page from reloading upon click.
     event.preventDefault();
-    // Fly to target's position. 
+    // Uncheck Follow Meowth if needed.
+    if (follow.checked) {
+      follow.click();
+    }
+    // Fly to target's position.
     mymap.flyTo(target.getLatLng(), 15);
   });
 
   // "Zoom Out"
-  var zoomOut = document.getElementById("zoomOut");
+  var zoomOut = document.getElementById('zoomOut');
 
-  zoomOut.addEventListener("click", function(event) {
+  zoomOut.addEventListener('click', function(event) {
     // Prevents the page from reloading upon click.
     event.preventDefault();
-    // Fly to target's position. 
+    // Uncheck Follow Meowth if needed.
+    if (follow.checked) {
+      follow.click();
+    }
+    // Fly to target's position.
     mymap.flyTo(rollaCenter, 10);
   });
-
-  // "Follow Meowth"
-  // ... doesn't work.. need to finish.
-  var follow = document.getElementById("zoomOut");
-
-  zoomOut.addEventListener("click", function(event) {
-    // Prevents the page from reloading upon click.
-    event.preventDefault();
-    // Fly to target's position. 
-    mymap.flyTo(meowth.getLatLng(), mymap.getZoom());
-  });
-
-
-
-
 
 })();
